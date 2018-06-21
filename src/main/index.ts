@@ -11,11 +11,12 @@ function createMainWindow() {
   const window = new BrowserWindow();
 
   if (isDevelopment) {
-    window.webContents.openDevTools();
+    // window.webContents.openDevTools();
   }
 
   if (isDevelopment) {
-    window.loadURL(`http://localhost:${process.env.ELECTRON_WEBPACK_WDS_PORT}`);
+    // window.loadURL(`http://localhost:${process.env.ELECTRON_WEBPACK_WDS_PORT}`);
+    window.loadURL('https://api.github.com/');
   } else {
     window.loadURL(
       formatUrl({
@@ -36,6 +37,34 @@ function createMainWindow() {
       window.focus();
     });
   });
+
+  try {
+    window.webContents.debugger.attach('1.1');
+  } catch (err) {
+    // tslint:disable-next-line:no-console
+    console.log('Debugger attach failed : ', err);
+  }
+
+  window.webContents.debugger.on('detach', (event, reason) => {
+    // tslint:disable-next-line:no-console
+    console.log('Debugger detached due to : ', reason);
+  });
+
+  window.webContents.debugger.on('message', (event, method, params) => {
+    if (method === 'Network.responseReceived') {
+      if (params.requestId && params.response && params.type.toUpperCase() === 'DOCUMENT') {
+        window.webContents.debugger.sendCommand('Network.getResponseBody', {
+          'requestId': params.requestId
+        }, (error, response) => {
+          // tslint:disable-next-line:no-console
+          console.log(error, response);
+          // window.webContents.debugger.detach();
+        });
+      }
+    }
+  });
+
+  window.webContents.debugger.sendCommand('Network.enable');
 
   return window;
 }

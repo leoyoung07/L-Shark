@@ -11,12 +11,11 @@ function createMainWindow() {
   const window = new BrowserWindow();
 
   if (isDevelopment) {
-    // window.webContents.openDevTools();
+    window.webContents.openDevTools();
   }
 
   if (isDevelopment) {
-    // window.loadURL(`http://localhost:${process.env.ELECTRON_WEBPACK_WDS_PORT}`);
-    window.loadURL('https://api.github.com/');
+    window.loadURL(`http://localhost:${process.env.ELECTRON_WEBPACK_WDS_PORT}`);
   } else {
     window.loadURL(
       formatUrl({
@@ -38,33 +37,40 @@ function createMainWindow() {
     });
   });
 
-  try {
-    window.webContents.debugger.attach('1.1');
-  } catch (err) {
-    // tslint:disable-next-line:no-console
-    console.log('Debugger attach failed : ', err);
-  }
+  window.webContents.on('did-finish-load', () => {
+    let newWin: BrowserWindow | null = new BrowserWindow({ width: 400, height: 320 });
+    newWin.on('close', function () { newWin = null; });
+    newWin.loadURL('https://api.github.com');
+    newWin.show();
 
-  window.webContents.debugger.on('detach', (event, reason) => {
-    // tslint:disable-next-line:no-console
-    console.log('Debugger detached due to : ', reason);
-  });
-
-  window.webContents.debugger.on('message', (event, method, params) => {
-    if (method === 'Network.responseReceived') {
-      if (params.requestId && params.response && params.type.toUpperCase() === 'DOCUMENT') {
-        window.webContents.debugger.sendCommand('Network.getResponseBody', {
-          'requestId': params.requestId
-        }, (error, response) => {
-          // tslint:disable-next-line:no-console
-          console.log(error, response);
-          // window.webContents.debugger.detach();
-        });
-      }
+    try {
+      newWin.webContents.debugger.attach('1.1');
+    } catch (err) {
+      // tslint:disable-next-line:no-console
+      console.log('Debugger attach failed : ', err);
     }
-  });
 
-  window.webContents.debugger.sendCommand('Network.enable');
+    newWin.webContents.debugger.on('detach', (event, reason) => {
+      // tslint:disable-next-line:no-console
+      console.log('Debugger detached due to : ', reason);
+    });
+
+    newWin.webContents.debugger.on('message', (event, method, params) => {
+      if (method === 'Network.responseReceived') {
+        if (params.requestId && params.response && params.type.toUpperCase() === 'DOCUMENT') {
+          newWin!.webContents.debugger.sendCommand('Network.getResponseBody', {
+            'requestId': params.requestId
+          }, (error, response) => {
+            // tslint:disable-next-line:no-console
+            console.log(error, response);
+            // newWin.webContents.debugger.detach();
+          });
+        }
+      }
+    });
+
+    newWin.webContents.debugger.sendCommand('Network.enable');
+  });
 
   return window;
 }

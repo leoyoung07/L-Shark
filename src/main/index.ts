@@ -40,7 +40,6 @@ function createMainWindow() {
   window.webContents.on('did-finish-load', () => {
     let newWin: BrowserWindow | null = new BrowserWindow({ width: 400, height: 320 });
     newWin.on('close', function () { newWin = null; });
-    newWin.loadURL('https://api.github.com');
     newWin.show();
 
     try {
@@ -49,27 +48,36 @@ function createMainWindow() {
       // tslint:disable-next-line:no-console
       console.log('Debugger attach failed : ', err);
     }
+    newWin.webContents.debugger.sendCommand('Network.enable');
 
     newWin.webContents.debugger.on('detach', (event, reason) => {
       // tslint:disable-next-line:no-console
       console.log('Debugger detached due to : ', reason);
     });
 
-    newWin.webContents.debugger.on('message', (event, method, params) => {
+    newWin!.loadURL('https://api.github.com');
+    newWin.webContents.debugger.on('message', async (event, method, params) => {
       if (method === 'Network.responseReceived') {
-        if (params.requestId && params.response && params.type.toUpperCase() === 'DOCUMENT') {
-          newWin!.webContents.debugger.sendCommand('Network.getResponseBody', {
-            'requestId': params.requestId
-          }, (error, response) => {
-            // tslint:disable-next-line:no-console
-            console.log(error, response);
-            // newWin.webContents.debugger.detach();
-          });
+        if (params.requestId && params.response) {
+          // tslint:disable-next-line:no-console
+          console.log(await getResponseBody(params.requestId));
         }
       }
     });
 
-    newWin.webContents.debugger.sendCommand('Network.enable');
+    function getResponseBody (requestId: string) {
+      return new Promise((resolve, reject) => {
+        newWin!.webContents.debugger.sendCommand('Network.getResponseBody', {
+          'requestId': requestId
+        }, (error, response) => {
+          if (error.code) {
+            reject(error);
+          } else {
+            resolve(response);
+          }
+        });
+      });
+    }
   });
 
   return window;

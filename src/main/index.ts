@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import * as path from 'path';
 import { format as formatUrl } from 'url';
 import Monitor from './Monitor';
@@ -38,10 +38,12 @@ function createMainWindow() {
     });
   });
 
-  window.webContents.on('did-finish-load', () => {
+  ipcMain.on('load-url', async (event: Electron.Event, args: string) => {
     const monitor = new Monitor();
     monitor.show();
-    monitor.load('https://api.github.com');
+    const response = await monitor.load(args);
+    monitor.close();
+    event.sender.send('url-loaded', JSON.stringify(response));
   });
 
   return window;

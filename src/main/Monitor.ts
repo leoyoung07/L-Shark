@@ -18,15 +18,6 @@ class Monitor {
       // tslint:disable-next-line:no-console
       console.log('Debugger detached due to : ', reason);
     });
-
-    this.newWin.webContents.debugger.on('message', async (event, method, params) => {
-      if (method === 'Network.responseReceived') {
-        if (params.requestId && params.response) {
-          // tslint:disable-next-line:no-console
-          console.log(await this.getResponseBody(params.requestId));
-        }
-      }
-    });
   }
 
   /**
@@ -40,7 +31,26 @@ class Monitor {
    * load
    */
   public load(url: string) {
-    this.newWin!.loadURL(url);
+    return new Promise((resolve, reject) => {
+      this.newWin!.loadURL(url);
+      this.newWin!.webContents.debugger.on('message', async (event, method, params) => {
+        if (method === 'Network.responseReceived') {
+          if (params.requestId && params.response) {
+            const response = await this.getResponseBody(params.requestId);
+            resolve(response);
+          }
+        }
+      });
+    });
+  }
+
+  /**
+   * close
+   */
+  public close() {
+    if (this.newWin) {
+      this.newWin.close();
+    }
   }
 
   private getResponseBody (requestId: string) {

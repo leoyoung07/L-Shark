@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
 import { format as formatUrl } from 'url';
+import Monitor from './Monitor';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
@@ -38,46 +39,9 @@ function createMainWindow() {
   });
 
   window.webContents.on('did-finish-load', () => {
-    let newWin: BrowserWindow | null = new BrowserWindow({ width: 400, height: 320 });
-    newWin.on('close', function () { newWin = null; });
-    newWin.show();
-
-    try {
-      newWin.webContents.debugger.attach('1.1');
-    } catch (err) {
-      // tslint:disable-next-line:no-console
-      console.log('Debugger attach failed : ', err);
-    }
-    newWin.webContents.debugger.sendCommand('Network.enable');
-
-    newWin.webContents.debugger.on('detach', (event, reason) => {
-      // tslint:disable-next-line:no-console
-      console.log('Debugger detached due to : ', reason);
-    });
-
-    newWin!.loadURL('https://api.github.com');
-    newWin.webContents.debugger.on('message', async (event, method, params) => {
-      if (method === 'Network.responseReceived') {
-        if (params.requestId && params.response) {
-          // tslint:disable-next-line:no-console
-          console.log(await getResponseBody(params.requestId));
-        }
-      }
-    });
-
-    function getResponseBody (requestId: string) {
-      return new Promise((resolve, reject) => {
-        newWin!.webContents.debugger.sendCommand('Network.getResponseBody', {
-          'requestId': requestId
-        }, (error, response) => {
-          if (error.code) {
-            reject(error);
-          } else {
-            resolve(response);
-          }
-        });
-      });
-    }
+    const monitor = new Monitor();
+    monitor.show();
+    monitor.load('https://api.github.com');
   });
 
   return window;

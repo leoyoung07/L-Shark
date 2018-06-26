@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import * as path from 'path';
 import { format as formatUrl } from 'url';
 import Monitor from './Monitor';
+import Proxy from './Proxy';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
@@ -45,7 +46,8 @@ function createMainWindow() {
     monitor.close();
     event.sender.send('url-loaded', JSON.stringify(response));
   });
-
+  const proxy = new Proxy();
+  proxy.start();
   return window;
 }
 

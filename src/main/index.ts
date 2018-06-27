@@ -6,6 +6,8 @@ import Proxy from './Proxy';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
+const isDebug = !!process.env.DEBUG;
+
 // global reference to mainWindow (necessary to prevent window from being garbage collected)
 let mainWindow: BrowserWindow | null;
 
@@ -16,17 +18,24 @@ function createMainWindow() {
     window.webContents.openDevTools();
   }
 
+  let url: string;
   if (isDevelopment) {
-    window.loadURL(`http://localhost:${process.env.ELECTRON_WEBPACK_WDS_PORT}`);
+    url = `http://localhost:${process.env.ELECTRON_WEBPACK_WDS_PORT}`;
+  } else if (isDebug) {
+    url = formatUrl({
+      pathname: path.resolve(__dirname, '..', 'renderer', 'index.html'),
+      protocol: 'file',
+      slashes: true
+    });
   } else {
-    window.loadURL(
-      formatUrl({
-        pathname: path.join(__dirname, 'index.html'),
-        protocol: 'file',
-        slashes: true
-      })
-    );
+    url = formatUrl({
+      pathname: path.join(__dirname, 'index.html'),
+      protocol: 'file',
+      slashes: true
+    });
   }
+
+  window.loadURL(url);
 
   window.on('closed', () => {
     mainWindow = null;

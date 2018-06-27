@@ -49,14 +49,19 @@ function createMainWindow() {
   });
 
   ipcMain.on('load-url', async (event: Electron.Event, args: string) => {
-    const monitor = new Monitor();
-    monitor.show();
-    const response = await monitor.load(args);
-    monitor.close();
-    event.sender.send('url-loaded', JSON.stringify(response));
+    // const monitor = new Monitor();
+    // monitor.show();
+    // const response = await monitor.load(args);
+    // monitor.close();
+
+    const proxy = new Proxy();
+    proxy.beforeSendRequest = function (requestDetail: { url: string; }) {
+      event.sender.send('url-loaded', requestDetail.url);
+      return null;
+    };
+    proxy.start();
   });
-  const proxy = new Proxy();
-  proxy.start();
+
   return window;
 }
 

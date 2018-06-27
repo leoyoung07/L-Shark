@@ -48,18 +48,19 @@ function createMainWindow() {
     });
   });
 
-  ipcMain.on('load-url', async (event: Electron.Event, args: string) => {
-    // const monitor = new Monitor();
-    // monitor.show();
-    // const response = await monitor.load(args);
-    // monitor.close();
-
+  window.webContents.on('did-finish-load', () => {
     const proxy = new Proxy();
     proxy.beforeSendRequest = function (requestDetail: { url: string; }) {
-      event.sender.send('url-loaded', requestDetail.url);
+      window.webContents.send('get-request', requestDetail);
       return null;
     };
     proxy.start();
+  });
+
+  ipcMain.on('load-url', async (event: Electron.Event, args: string) => {
+    const monitor = new Monitor();
+    monitor.show();
+    await monitor.load(args);
   });
 
   return window;

@@ -6,7 +6,7 @@ interface IPanelProps {
 }
 interface IPanelState {
   url: string;
-  response: string;
+  requests: Array<string>;
 }
 class Panel extends React.Component<IPanelProps, IPanelState> {
 
@@ -16,14 +16,17 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
     this.handleLoadBtnClick = this.handleLoadBtnClick.bind(this);
     this.state = {
       url: 'https://api.github.com',
-      response: ''
+      requests: []
     };
   }
 
   componentDidMount() {
-    ipcRenderer.on('url-loaded', (event: Electron.Event, args: string) => {
+    ipcRenderer.on('get-request', (event: Electron.Event, args: {}) => {
+      const request = args as {url: string};
+      const newRequests = this.state.requests.slice();
+      newRequests.push(request.url);
       this.setState({
-        response: args
+        requests: newRequests
       });
     });
   }
@@ -33,8 +36,14 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
       <div>
         <input type="text" value={this.state.url} onChange={this.handleUrlInputChange}/>
         <button onClick={this.handleLoadBtnClick}>Load</button>
-        <h1>Response: </h1>
-        <p>{this.state.response}</p>
+        <h1>Requests: </h1>
+        <ul>
+          {this.state.requests.map((request, index) => {
+            return (
+              <li key={index}>{request}</li>
+            );
+          })}
+        </ul>
       </div>
     );
   }

@@ -17,6 +17,9 @@ class Proxy {
   // tslint:disable-next-line:no-any
   private proxyServer: any;
 
+  // tslint:disable-next-line:no-any
+  private proxyOptions: any;
+
   constructor() {
 
     const proxyRule = {
@@ -26,7 +29,7 @@ class Proxy {
       beforeSendResponse: this.beforeSendResponseWrapper.bind(this),
       // 是否处理https请求
       *beforeDealHttpsRequest(requestDetail: {}) {
-        return false;
+        return true;
       },
       // 请求出错的事件
       *onError(requestDetail: {}, error: {}) {
@@ -38,7 +41,7 @@ class Proxy {
       }
     };
 
-    const options = {
+    this.proxyOptions = {
       port: 7269,
       rule: proxyRule,
       webInterface: {
@@ -46,18 +49,30 @@ class Proxy {
         webPort: 7270
       },
       throttle: 10000,
-      forceProxyHttps: false,
+      forceProxyHttps: true,
       wsIntercept: false, // 不开启websocket代理
       silent: false
     };
-    this.proxyServer = new AnyProxy.ProxyServer(options);
   }
 
   /**
    * start
    */
   public start() {
+    if (!this.proxyServer) {
+      this.proxyServer = new AnyProxy.ProxyServer(this.proxyOptions);
+    }
     this.proxyServer.start();
+  }
+
+  /**
+   * stop
+   */
+  public stop() {
+    if (this.proxyServer) {
+      this.proxyServer.close();
+      this.proxyServer = null;
+    }
   }
 
   private *beforeSendRequestWrapper (requestDetail: { url: string }) {

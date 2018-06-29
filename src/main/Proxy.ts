@@ -1,12 +1,35 @@
 import * as AnyProxy from 'anyproxy';
 
+export interface IRequestDetail {
+  protocol: string;
+  url: string;
+  requestOptions: {
+    hostname: string,
+    port: number,
+    path: string,
+    method: string,
+    headers: {}
+  };
+  requestData: {};
+  _req: { __request_id?: string };
+}
+
+export interface IResponseDetail {
+  response: {
+    statusCode: number,
+    header: {},
+    body: string | Buffer
+  };
+  _req: { __request_id?: string };
+}
+
 type RequestHook = (
-  requestDetail: { url: string }
+  requestDetail: IRequestDetail
 ) => Promise<{}> | {} | null;
 
 type ResponseHook = (
-  requestDetail: { url: string },
-  responseDetail: { response: string }
+  requestDetail: IRequestDetail,
+  responseDetail: IResponseDetail
 ) => Promise<{}> | {} | null;
 
 class Proxy {
@@ -28,15 +51,15 @@ class Proxy {
       // 发送响应前处理
       beforeSendResponse: this.beforeSendResponseWrapper.bind(this),
       // 是否处理https请求
-      *beforeDealHttpsRequest(requestDetail: {}) {
+      *beforeDealHttpsRequest(requestDetail: IRequestDetail) {
         return true;
       },
       // 请求出错的事件
-      *onError(requestDetail: {}, error: {}) {
+      *onError(requestDetail: IRequestDetail, error: {}) {
         return null;
       },
       // https连接服务器出错
-      *onConnectError(requestDetail: {}, error: {}) {
+      *onConnectError(requestDetail: IRequestDetail, error: {}) {
         return null;
       }
     };
@@ -75,7 +98,7 @@ class Proxy {
     }
   }
 
-  private *beforeSendRequestWrapper (requestDetail: { url: string }) {
+  private *beforeSendRequestWrapper (requestDetail: IRequestDetail) {
     if (this.beforeSendRequest) {
       return this.beforeSendRequest(requestDetail);
     }
@@ -83,8 +106,8 @@ class Proxy {
   }
 
   private *beforeSendResponseWrapper (
-    requestDetail: { url: string },
-    responseDetail: { response: string }
+    requestDetail: IRequestDetail,
+    responseDetail: IResponseDetail
   ) {
     if (this.beforeSendResponse) {
       return this.beforeSendResponse(requestDetail, responseDetail);

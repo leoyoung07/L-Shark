@@ -22,9 +22,9 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
 
   componentDidMount() {
     ipcRenderer.on('get-request', (event: Electron.Event, args: {}) => {
-      const request = args as {url: string};
+      const request = args as {id: string, url: string};
       const newRequests = this.state.requests.slice();
-      newRequests.push(request.url);
+      newRequests.push(JSON.stringify(request));
       this.setState({
         requests: newRequests
       });
@@ -40,7 +40,7 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
         <ul>
           {this.state.requests.map((request, index) => {
             return (
-              <li key={index}>{request}</li>
+              <li key={index} style={{backgroundColor: 'yellow'}}>{request}</li>
             );
           })}
         </ul>

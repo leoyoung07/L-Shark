@@ -1,12 +1,18 @@
 import { ipcRenderer } from 'electron';
 import React from 'react';
+import { IResponseDetail } from '../main/Proxy';
+interface IRequest {
+  url: string;
+  id: string;
+  pending: boolean;
+}
 
 interface IPanelProps {
 
 }
 interface IPanelState {
   url: string;
-  requests: Array<string>;
+  requests: Array<IRequest>;
 }
 class Panel extends React.Component<IPanelProps, IPanelState> {
 
@@ -22,9 +28,19 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
 
   componentDidMount() {
     ipcRenderer.on('get-request', (event: Electron.Event, args: {}) => {
-      const request = args as {id: string, url: string};
+      const request = args as IRequest;
       const newRequests = this.state.requests.slice();
-      newRequests.push(JSON.stringify(request));
+      request.pending = true;
+      newRequests.push(request);
+      this.setState({
+        requests: newRequests
+      });
+    });
+    ipcRenderer.on('get-response', (event: Electron.Event, args: {}) => {
+      const request = args as {id: string, responseDetail: IResponseDetail};
+      const index = this.state.requests.findIndex((value) => value.id === request.id);
+      const newRequests = this.state.requests.slice();
+      newRequests[index].pending = false;
       this.setState({
         requests: newRequests
       });
@@ -40,7 +56,7 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
         <ul>
           {this.state.requests.map((request, index) => {
             return (
-              <li key={index} style={{backgroundColor: 'yellow'}}>{request}</li>
+              <li key={request.id} style={{backgroundColor: request.pending ? 'red' : 'green'}}>{request.url}</li>
             );
           })}
         </ul>

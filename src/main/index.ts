@@ -60,7 +60,7 @@ function createMainWindow() {
       requestDetail: IRequestDetail,
       responseDetail: IResponseDetail
     ) {
-      window.webContents.send('get-response', {requestId: requestDetail._req.__request_id, detail: responseDetail});
+      window.webContents.send('get-response', {id: requestDetail._req.__request_id, detail: responseDetail});
       return null;
     };
     proxy.start();

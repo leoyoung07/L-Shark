@@ -36,7 +36,8 @@
   "electronWebpack": {
     "title": "L-Shark",
     "main": {
-      "webpackConfig": "config/main.webpack.additions.js"
+      "webpackConfig": "config/main.webpack.additions.js",
+      "extraEntries": ["@/ProxyWorker.ts"]
     },
     "renderer": {
       "webpackConfig": "config/renderer.webpack.additions.js"

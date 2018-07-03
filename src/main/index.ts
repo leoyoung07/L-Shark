@@ -1,8 +1,8 @@
+import { fork } from 'child_process';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import * as path from 'path';
 import { format as formatUrl } from 'url';
 import Monitor from './Monitor';
-import Proxy, { IRequestDetail, IResponseDetail } from './Proxy';
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
@@ -49,21 +49,13 @@ function createMainWindow() {
   });
 
   window.webContents.on('did-finish-load', () => {
-    const proxy = new Proxy();
-    proxy.beforeSendRequest = function(requestDetail: IRequestDetail) {
-      const id = new Date().getTime().toString();
-      requestDetail._req.__request_id = id;
-      window.webContents.send('get-request', {id: id, url: requestDetail.url});
-      return null;
-    };
-    proxy.beforeSendResponse = function(
-      requestDetail: IRequestDetail,
-      responseDetail: IResponseDetail
-    ) {
-      window.webContents.send('get-response', {id: requestDetail._req.__request_id, detail: responseDetail});
-      return null;
-    };
-    proxy.start();
+    let proxyWorkerPath: string;
+    if (isDevelopment) {
+      proxyWorkerPath = path.resolve(__dirname, '..', '..', 'dist', 'main', 'ProxyWorker.js');
+    } else {
+      proxyWorkerPath = path.resolve(__dirname, './ProxyWorker.js');
+    }
+    fork(proxyWorkerPath);
   });
 
   ipcMain.on('load-url', async (event: Electron.Event, args: string) => {

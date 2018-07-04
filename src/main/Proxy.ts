@@ -5,11 +5,11 @@ export interface IRequestDetail {
   protocol: string;
   url: string;
   requestOptions: {
-    hostname: string,
-    port: number,
-    path: string,
-    method: string,
-    headers: {}
+    hostname: string;
+    port: number;
+    path: string;
+    method: string;
+    headers: {};
   };
   requestData: {};
   _req: { __request_id?: string };
@@ -17,68 +17,20 @@ export interface IRequestDetail {
 
 export interface IResponseDetail {
   response: {
-    statusCode: number,
-    header: {},
-    body: string | Buffer
+    statusCode: number;
+    header: {};
+    body: string | Buffer;
   };
   _req: { __request_id?: string };
 }
 
-type RequestHook = (
-  requestDetail: IRequestDetail
-) => Promise<{}> | {} | null;
-
-type ResponseHook = (
-  requestDetail: IRequestDetail,
-  responseDetail: IResponseDetail
-) => Promise<{}> | {} | null;
-
 class Proxy extends EventEmitter {
-  public beforeSendRequest: RequestHook | null = null;
-
-  public beforeSendResponse: ResponseHook | null = null;
-
   // tslint:disable-next-line:no-any
   private proxyServer: any;
 
   // tslint:disable-next-line:no-any
-  private proxyOptions: any;
-
-  constructor() {
+  constructor(private proxyOptions: any) {
     super();
-    const that = this;
-    const proxyRule = {
-      summary: 'proxy',
-      beforeSendRequest: this.beforeSendRequestWrapper.bind(this),
-      // 发送响应前处理
-      beforeSendResponse: this.beforeSendResponseWrapper.bind(this),
-      // // 是否处理https请求
-      // *beforeDealHttpsRequest(requestDetail: IRequestDetail) {
-      //   return true;
-      // },
-      // 请求出错的事件
-      *onError(requestDetail: IRequestDetail, error: {}) {
-        that.emit('error', error);
-        return null;
-      },
-      // https连接服务器出错
-      *onConnectError(requestDetail: IRequestDetail, error: {}) {
-        that.emit('connect-error', error);
-        return null;
-      }
-    };
-
-    this.proxyOptions = {
-      port: 7269,
-      rule: proxyRule,
-      webInterface: {
-        enable: false
-      },
-      // throttle: 10000,
-      forceProxyHttps: true,
-      wsIntercept: false, // 不开启websocket代理
-      silent: false
-    };
   }
 
   /**
@@ -99,23 +51,6 @@ class Proxy extends EventEmitter {
       this.proxyServer.close();
       this.proxyServer = null;
     }
-  }
-
-  private *beforeSendRequestWrapper (requestDetail: IRequestDetail) {
-    if (this.beforeSendRequest) {
-      return this.beforeSendRequest(requestDetail);
-    }
-    return null;
-  }
-
-  private *beforeSendResponseWrapper (
-    requestDetail: IRequestDetail,
-    responseDetail: IResponseDetail
-  ) {
-    if (this.beforeSendResponse) {
-      return this.beforeSendResponse(requestDetail, responseDetail);
-    }
-    return null;
   }
 }
 

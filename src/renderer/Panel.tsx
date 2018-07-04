@@ -1,50 +1,60 @@
 import { ipcRenderer } from 'electron';
 import React from 'react';
-import { IResponseDetail } from '../main/Proxy';
-interface IRequest {
-  url: string;
+import { IRequest, IResponse } from '../main/Proxy';
+interface ICapturedRequest {
   id: string;
-  pending: boolean;
+  detail: IRequest;
 }
 
-interface IPanelProps {
-
+interface ICapturedResponse {
+  id: string;
+  detail: IResponse;
 }
+
+interface IRequestHistory {
+  [id: string]: {
+    request: ICapturedRequest;
+    pending: boolean;
+    response?: ICapturedResponse;
+  };
+}
+
+interface IPanelProps {}
 interface IPanelState {
   url: string;
-  requests: Array<IRequest>;
+  requestHistory: IRequestHistory;
   connectError?: string;
   error?: string;
 }
 class Panel extends React.Component<IPanelProps, IPanelState> {
-
-  constructor (props: IPanelProps) {
+  constructor(props: IPanelProps) {
     super(props);
     this.handleUrlInputChange = this.handleUrlInputChange.bind(this);
     this.handleLoadBtnClick = this.handleLoadBtnClick.bind(this);
+    this.handleRequestHistoryClick = this.handleRequestHistoryClick.bind(this);
     this.state = {
-      url: 'https://api.github.com',
-      requests: []
+      url: '',
+      requestHistory: {}
     };
   }
 
   componentDidMount() {
     ipcRenderer.on('get-request', (event: Electron.Event, args: {}) => {
-      const request = args as IRequest;
-      const newRequests = this.state.requests.slice();
-      request.pending = true;
-      newRequests.push(request);
+      const request = args as ICapturedRequest;
+      const requestHistory = Object.assign({}, this.state.requestHistory);
+      requestHistory[request.id] = { request: request, pending: true };
       this.setState({
-        requests: newRequests
+        requestHistory: requestHistory
       });
     });
     ipcRenderer.on('get-response', (event: Electron.Event, args: {}) => {
-      const request = args as {id: string, responseDetail: IResponseDetail};
-      const index = this.state.requests.findIndex((value) => value.id === request.id);
-      const newRequests = this.state.requests.slice();
-      newRequests[index].pending = false;
+      const response = args as ICapturedResponse;
+      const requestHistory = Object.assign({}, this.state.requestHistory);
+      const requestData = requestHistory[response.id];
+      requestData.pending = false;
+      requestData.response = response;
       this.setState({
-        requests: newRequests
+        requestHistory: requestHistory
       });
     });
 
@@ -63,25 +73,35 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
   render() {
     return (
       <div>
-        <input type="text" value={this.state.url} onChange={this.handleUrlInputChange}/>
-        <button onClick={this.handleLoadBtnClick}>Load</button>
         <h1>Requests: </h1>
         <ul>
-          {this.state.requests.map((request, index) => {
-            return (
-              <li key={request.id} style={{backgroundColor: request.pending ? 'red' : 'green'}}>{request.url}</li>
-            );
-          })}
+          {Object.keys(this.state.requestHistory)
+            .sort()
+            .map((id, index) => {
+              const requestData = this.state.requestHistory[id];
+              return (
+                <li
+                  key={id}
+                  style={{
+                    color: requestData.pending ? 'red' : 'green',
+                    cursor: 'pointer'
+                  }}
+                  onClick={(e) => { this.handleRequestHistoryClick(id, e); }}
+                >
+                  {requestData.request.detail.url}
+                </li>
+              );
+            })}
         </ul>
-        <h1>Connect Error</h1>
+        <h3>Connect Error</h3>
         <p>{this.state.connectError}</p>
-        <h1>Error</h1>
+        <h3>Error</h3>
         <p>{this.state.error}</p>
       </div>
     );
   }
 
-  private handleUrlInputChange (e: React.ChangeEvent<HTMLInputElement>) {
+  private handleUrlInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target) {
       this.setState({
         url: e.target.value
@@ -89,8 +109,14 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
     }
   }
 
-  private handleLoadBtnClick (e: React.MouseEvent<HTMLButtonElement>) {
+  private handleLoadBtnClick(e: React.MouseEvent<HTMLButtonElement>) {
     ipcRenderer.send('load-url', this.state.url);
+  }
+
+  private handleRequestHistoryClick(id: string, e: React.MouseEvent<HTMLLIElement>) {
+    const requestData = this.state.requestHistory[id];
+    // tslint:disable-next-line:no-console
+    console.log(requestData);
   }
 }
 

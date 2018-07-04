@@ -1,26 +1,38 @@
 import * as AnyProxy from 'anyproxy';
 import { EventEmitter } from 'events';
 
-export interface IRequestDetail {
+export interface IRequestOptions {
+  hostname: string;
+  port: number;
+  path: string;
+  method: string;
+  headers: {};
+}
+
+export interface IRequestData {
+
+}
+
+export interface IRequest {
   protocol: string;
   url: string;
-  requestOptions: {
-    hostname: string;
-    port: number;
-    path: string;
-    method: string;
-    headers: {};
-  };
-  requestData: {};
+  requestOptions: IRequestOptions;
+  requestData: IRequestData;
+}
+
+export interface IRequestDetail extends IRequest {
+
   _req: { __request_id?: string };
 }
 
+export interface IResponse {
+  statusCode: number;
+  header: {};
+  body: string | Buffer;
+}
+
 export interface IResponseDetail {
-  response: {
-    statusCode: number;
-    header: {};
-    body: string | Buffer;
-  };
+  response: IResponse;
   _req: { __request_id?: string };
 }
 

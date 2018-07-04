@@ -8,7 +8,15 @@ const proxyRule = {
     requestDetail._req.__request_id = id;
     process.send!({
       type: 'get-request',
-      data: { id: id, url: requestDetail.url }
+      data: {
+        id: id,
+        detail: {
+          url: requestDetail.url,
+          protocol: requestDetail.protocol,
+          requestOptions: requestDetail.requestOptions,
+          requestData: requestDetail.requestData
+        }
+      }
     });
     return null;
   },

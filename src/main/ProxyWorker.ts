@@ -3,14 +3,24 @@ const proxy = new Proxy();
 proxy.beforeSendRequest = function(requestDetail: IRequestDetail) {
   const id = new Date().getTime().toString();
   requestDetail._req.__request_id = id;
-  // window.webContents.send('get-request', {id: id, url: requestDetail.url});
+  process.send!({type: 'get-request', data: {id: id, url: requestDetail.url}});
   return null;
 };
 proxy.beforeSendResponse = function(
   requestDetail: IRequestDetail,
   responseDetail: IResponseDetail
 ) {
-  // window.webContents.send('get-response', {id: requestDetail._req.__request_id, detail: responseDetail});
+  process.send!({type: 'get-response', data: {id: requestDetail._req.__request_id, detail: responseDetail.response}});
   return null;
 };
-proxy.start();
+proxy.on('error', (error: {}) => {
+  process.send!({type: 'error', data: error.toString()});
+});
+proxy.on('connect-error', (error: {}) => {
+  process.send!({type: 'connect-error', data: error.toString()});
+});
+try {
+  proxy.start();
+} catch (error) {
+  process.send!({type: 'error', data: error.toString()});
+}

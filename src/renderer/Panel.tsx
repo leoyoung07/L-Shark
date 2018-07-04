@@ -13,6 +13,8 @@ interface IPanelProps {
 interface IPanelState {
   url: string;
   requests: Array<IRequest>;
+  connectError?: string;
+  error?: string;
 }
 class Panel extends React.Component<IPanelProps, IPanelState> {
 
@@ -45,6 +47,17 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
         requests: newRequests
       });
     });
+
+    ipcRenderer.on('connect-error', (event: Electron.Event, args: {}) => {
+      this.setState({
+        connectError: JSON.stringify(args)
+      });
+    });
+    ipcRenderer.on('error', (event: Electron.Event, args: {}) => {
+      this.setState({
+        error: JSON.stringify(args)
+      });
+    });
   }
 
   render() {
@@ -60,6 +73,10 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
             );
           })}
         </ul>
+        <h1>Connect Error</h1>
+        <p>{this.state.connectError}</p>
+        <h1>Error</h1>
+        <p>{this.state.error}</p>
       </div>
     );
   }

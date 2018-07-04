@@ -1,4 +1,5 @@
 import * as AnyProxy from 'anyproxy';
+import { EventEmitter } from 'events';
 
 export interface IRequestDetail {
   protocol: string;
@@ -32,7 +33,7 @@ type ResponseHook = (
   responseDetail: IResponseDetail
 ) => Promise<{}> | {} | null;
 
-class Proxy {
+class Proxy extends EventEmitter {
   public beforeSendRequest: RequestHook | null = null;
 
   public beforeSendResponse: ResponseHook | null = null;
@@ -44,22 +45,25 @@ class Proxy {
   private proxyOptions: any;
 
   constructor() {
-
+    super();
+    const that = this;
     const proxyRule = {
       summary: 'proxy',
       beforeSendRequest: this.beforeSendRequestWrapper.bind(this),
       // 发送响应前处理
       beforeSendResponse: this.beforeSendResponseWrapper.bind(this),
-      // 是否处理https请求
-      *beforeDealHttpsRequest(requestDetail: IRequestDetail) {
-        return true;
-      },
+      // // 是否处理https请求
+      // *beforeDealHttpsRequest(requestDetail: IRequestDetail) {
+      //   return true;
+      // },
       // 请求出错的事件
       *onError(requestDetail: IRequestDetail, error: {}) {
+        that.emit('error', error);
         return null;
       },
       // https连接服务器出错
       *onConnectError(requestDetail: IRequestDetail, error: {}) {
+        that.emit('connect-error', error);
         return null;
       }
     };
@@ -68,10 +72,9 @@ class Proxy {
       port: 7269,
       rule: proxyRule,
       webInterface: {
-        enable: true,
-        webPort: 7270
+        enable: false
       },
-      throttle: 10000,
+      // throttle: 10000,
       forceProxyHttps: true,
       wsIntercept: false, // 不开启websocket代理
       silent: false

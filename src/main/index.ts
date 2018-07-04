@@ -55,7 +55,20 @@ function createMainWindow() {
     } else {
       proxyWorkerPath = path.resolve(__dirname, './ProxyWorker.js');
     }
-    fork(proxyWorkerPath);
+    const worker = fork(proxyWorkerPath);
+    worker.on('message', (message) => {
+      if (message.type === 'get-request') {
+        window.webContents.send('get-request', message.data);
+      } else if (message.type === 'get-response') {
+        window.webContents.send('get-response', message.data);
+      } else if (message.type === 'connect-error') {
+        window.webContents.send('connect-error', message.data);
+      } else if (message.type === 'error') {
+        // tslint:disable-next-line:no-console
+        console.log(message.data);
+        window.webContents.send('error', message.data);
+      }
+    });
   });
 
   ipcMain.on('load-url', async (event: Electron.Event, args: string) => {

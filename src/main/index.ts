@@ -12,7 +12,13 @@ const isDebug = !!process.env.DEBUG;
 let mainWindow: BrowserWindow | null;
 
 function createMainWindow() {
-  const window = new BrowserWindow();
+  const window = new BrowserWindow(
+    {
+      webPreferences: {
+        webSecurity: false
+      }
+    }
+  );
 
   if (isDevelopment) {
     window.webContents.openDevTools();
@@ -64,8 +70,6 @@ function createMainWindow() {
       } else if (message.type === 'connect-error') {
         window.webContents.send('connect-error', message.data);
       } else if (message.type === 'error') {
-        // tslint:disable-next-line:no-console
-        console.log(message.data);
         window.webContents.send('error', message.data);
       }
     });

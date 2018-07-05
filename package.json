@@ -14,6 +14,7 @@
     "react": "^16.4.1",
     "react-dom": "^16.4.1",
     "react-router": "^3.2.1",
+    "react-uwp": "^1.1.9",
     "source-map-support": "^0.5.5"
   },
   "devDependencies": {
@@ -37,7 +38,9 @@
     "title": "L-Shark",
     "main": {
       "webpackConfig": "config/main.webpack.additions.js",
-      "extraEntries": ["@/ProxyWorker.ts"]
+      "extraEntries": [
+        "@/ProxyWorker.ts"
+      ]
     },
     "renderer": {
       "webpackConfig": "config/renderer.webpack.additions.js"

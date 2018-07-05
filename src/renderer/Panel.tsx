@@ -1,5 +1,7 @@
 import { ipcRenderer } from 'electron';
 import React from 'react';
+import ListView from 'react-uwp/ListView';
+import { getTheme, Theme as UWPThemeProvider } from 'react-uwp/Theme';
 import { IRequest, IResponse } from '../main/Proxy';
 interface ICapturedRequest {
   id: string;
@@ -73,26 +75,33 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
   render() {
     return (
       <div>
-        <h1>Requests: </h1>
-        <ul>
-          {Object.keys(this.state.requestHistory)
-            .sort()
-            .map((id, index) => {
-              const requestData = this.state.requestHistory[id];
-              return (
-                <li
-                  key={id}
-                  style={{
-                    color: requestData.pending ? 'red' : 'green',
-                    cursor: 'pointer'
-                  }}
-                  onClick={(e) => { this.handleRequestHistoryClick(id, e); }}
-                >
-                  {requestData.request.detail.url}
-                </li>
-              );
-            })}
-        </ul>
+        <UWPThemeProvider
+          theme={getTheme({
+            themeName: 'light', // set custom theme
+          })}
+        >
+          <ListView
+            listSource={Object.keys(this.state.requestHistory)
+              .sort()
+              .map((id, index) => {
+                const requestData = this.state.requestHistory[id];
+                return (
+                  <span
+                    key={id}
+                    style={{
+                      color: requestData.pending ? 'red' : 'green',
+                      cursor: 'pointer'
+                    }}
+                    onClick={e => {
+                      this.handleRequestHistoryClick(id, e);
+                    }}
+                  >
+                    {requestData.request.detail.url}
+                  </span>
+                );
+              })}
+          />
+        </UWPThemeProvider>
         <h3>Connect Error</h3>
         <p>{this.state.connectError}</p>
         <h3>Error</h3>
@@ -113,7 +122,10 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
     ipcRenderer.send('load-url', this.state.url);
   }
 
-  private handleRequestHistoryClick(id: string, e: React.MouseEvent<HTMLLIElement>) {
+  private handleRequestHistoryClick(
+    id: string,
+    e: React.MouseEvent<HTMLElement>
+  ) {
     const requestData = this.state.requestHistory[id];
     // tslint:disable-next-line:no-console
     console.log(requestData);

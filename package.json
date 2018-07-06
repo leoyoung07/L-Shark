@@ -26,6 +26,8 @@
     "electron-builder": "^20.11.1",
     "electron-webpack": "^2.0.1",
     "electron-webpack-ts": "^2.0.2",
+    "node-sass": "^4.9.1",
+    "sass-loader": "^7.0.3",
     "tslint": "^5.10.0",
     "tslint-react": "^3.6.0",
     "typescript": "^2.9.2",

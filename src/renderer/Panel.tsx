@@ -1,6 +1,8 @@
 import { ipcRenderer } from 'electron';
 import React from 'react';
 import ListView from 'react-uwp/ListView';
+import NavigationView from 'react-uwp/NavigationView';
+import SplitViewCommand from 'react-uwp/SplitViewCommand';
 import { getTheme, Theme as UWPThemeProvider } from 'react-uwp/Theme';
 import { IRequest, IResponse } from '../main/Proxy';
 interface ICapturedRequest {
@@ -73,39 +75,63 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
   }
 
   render() {
+    const baseStyle: React.CSSProperties = {
+      margin: 0,
+      width: '100%',
+      height: '100%'
+    };
+    const navigationTopNodes = [];
+
+    const navigationBottomNode = [
+      <SplitViewCommand key={0} label="Settings" icon={'\uE713'} />
+    ];
     return (
-      <div>
+      <div style={baseStyle}>
         <UWPThemeProvider
           theme={getTheme({
-            themeName: 'light', // set custom theme
+            themeName: 'light' // set custom theme
           })}
         >
-          <ListView
-            listSource={Object.keys(this.state.requestHistory)
-              .sort()
-              .map((id, index) => {
-                const requestData = this.state.requestHistory[id];
-                return (
-                  <span
-                    key={id}
-                    style={{
-                      color: requestData.pending ? 'red' : 'green',
-                      cursor: 'pointer'
-                    }}
-                    onClick={e => {
-                      this.handleRequestHistoryClick(id, e);
-                    }}
-                  >
-                    {requestData.request.detail.url}
-                  </span>
-                );
-              })}
-          />
+          <NavigationView
+            style={baseStyle}
+            pageTitle="L-Shark"
+            displayMode="compact"
+            autoResize={false}
+            initWidth={48}
+            navigationTopNodes={navigationTopNodes}
+            navigationBottomNodes={navigationBottomNode}
+            focusNavigationNodeIndex={3}
+          >
+            <ListView
+              style={{
+                margin: 0,
+                width: '100%',
+                height: '100%',
+                overflowX: 'hidden',
+                overflowY: 'auto'
+              }}
+              listSource={Object.keys(this.state.requestHistory)
+                .sort()
+                .map((id, index) => {
+                  const requestData = this.state.requestHistory[id];
+                  return (
+                    <div
+                      key={id}
+                      style={{
+                        color: requestData.pending ? 'gray' : 'black',
+                        cursor: 'pointer'
+                      }}
+                      onClick={e => {
+                        this.handleRequestHistoryClick(id, e);
+                      }}
+                    >
+                      {requestData.request.detail.url}
+                    </div>
+                  );
+                })}
+            />
+          </NavigationView>
         </UWPThemeProvider>
-        <h3>Connect Error</h3>
-        <p>{this.state.connectError}</p>
-        <h3>Error</h3>
-        <p>{this.state.error}</p>
       </div>
     );
   }

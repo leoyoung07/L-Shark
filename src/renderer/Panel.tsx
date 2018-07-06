@@ -1,9 +1,7 @@
 import { ipcRenderer } from 'electron';
 import React from 'react';
 import ListView from 'react-uwp/ListView';
-import NavigationView from 'react-uwp/NavigationView';
-import SplitViewCommand from 'react-uwp/SplitViewCommand';
-import { getTheme, Theme as UWPThemeProvider } from 'react-uwp/Theme';
+import SplitView, { SplitViewPane } from 'react-uwp/SplitView';
 import { IRequest, IResponse } from '../main/Proxy';
 interface ICapturedRequest {
   id: string;
@@ -16,11 +14,13 @@ interface ICapturedResponse {
 }
 
 interface IRequestHistory {
-  [id: string]: {
-    request: ICapturedRequest;
-    pending: boolean;
-    response?: ICapturedResponse;
-  };
+  [id: string]: IRequestData;
+}
+
+interface IRequestData {
+  request: ICapturedRequest;
+  pending: boolean;
+  response?: ICapturedResponse;
 }
 
 interface IPanelProps {}
@@ -29,6 +29,8 @@ interface IPanelState {
   requestHistory: IRequestHistory;
   connectError?: string;
   error?: string;
+  expanded: boolean;
+  currentRequest?: IRequestData;
 }
 class Panel extends React.Component<IPanelProps, IPanelState> {
   constructor(props: IPanelProps) {
@@ -38,7 +40,8 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
     this.handleRequestHistoryClick = this.handleRequestHistoryClick.bind(this);
     this.state = {
       url: '',
-      requestHistory: {}
+      requestHistory: {},
+      expanded: false
     };
   }
 
@@ -80,58 +83,65 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
       width: '100%',
       height: '100%'
     };
-    const navigationTopNodes = [];
-
-    const navigationBottomNode = [
-      <SplitViewCommand key={0} label="Settings" icon={'\uE713'} />
-    ];
     return (
       <div style={baseStyle}>
-        <UWPThemeProvider
-          theme={getTheme({
-            themeName: 'light' // set custom theme
-          })}
+        <SplitView
+          defaultExpanded={this.state.expanded}
+          displayMode="overlay"
+          onClosePane={() => {
+            this.setState({ expanded: false });
+          }}
+          style={baseStyle}
+          expandedWidth={500}
         >
-          <NavigationView
-            style={baseStyle}
-            pageTitle="L-Shark"
-            displayMode="compact"
-            autoResize={false}
-            initWidth={48}
-            navigationTopNodes={navigationTopNodes}
-            navigationBottomNodes={navigationBottomNode}
-            focusNavigationNodeIndex={3}
-          >
-            <ListView
-              style={{
-                margin: 0,
-                width: '100%',
-                height: '100%',
-                overflowX: 'hidden',
-                overflowY: 'auto'
-              }}
-              listSource={Object.keys(this.state.requestHistory)
-                .sort()
-                .map((id, index) => {
-                  const requestData = this.state.requestHistory[id];
-                  return (
-                    <div
-                      key={id}
-                      style={{
-                        color: requestData.pending ? 'gray' : 'black',
-                        cursor: 'pointer'
-                      }}
-                      onClick={e => {
-                        this.handleRequestHistoryClick(id, e);
-                      }}
-                    >
-                      {requestData.request.detail.url}
-                    </div>
-                  );
-                })}
-            />
-          </NavigationView>
-        </UWPThemeProvider>
+          <ListView
+            style={{
+              margin: 0,
+              width: '100%',
+              height: '100%',
+              overflowX: 'hidden',
+              overflowY: 'auto'
+            }}
+            listSource={Object.keys(this.state.requestHistory)
+              .sort()
+              .map((id, index) => {
+                const requestData = this.state.requestHistory[id];
+                return (
+                  <div
+                    key={id}
+                    style={{
+                      color: requestData.pending ? 'gray' : 'black',
+                      cursor: 'pointer'
+                    }}
+                    onClick={e => {
+                      this.handleRequestHistoryClick(id, e);
+                    }}
+                  >
+                    {requestData.request.detail.url}
+                  </div>
+                );
+              })}
+          />
+
+          <SplitViewPane>
+            {this.state.currentRequest ? (
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  padding: '10px',
+                  overflowX: 'hidden',
+                  overflowY: 'auto'
+                }}
+              >
+                <h3>Request</h3>
+                <p>{JSON.stringify(this.state.currentRequest.request)}</p>
+                <h3>Response</h3>
+                <p>{JSON.stringify(this.state.currentRequest.response)}</p>
+              </div>
+            ) : null}
+          </SplitViewPane>
+        </SplitView>
       </div>
     );
   }
@@ -153,8 +163,7 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
     e: React.MouseEvent<HTMLElement>
   ) {
     const requestData = this.state.requestHistory[id];
-    // tslint:disable-next-line:no-console
-    console.log(requestData);
+    this.setState({ expanded: true, currentRequest: requestData });
   }
 }
 

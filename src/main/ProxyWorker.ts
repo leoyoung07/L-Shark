@@ -25,11 +25,17 @@ const proxyRule = {
     requestDetail: IRequestDetail,
     responseDetail: IResponseDetail
   ) {
+    const response = responseDetail.response;
+    response.body = response.body.toString();
     process.send!({
       type: 'get-response',
       data: {
         id: requestDetail._req.__request_id,
-        detail: responseDetail.response
+        detail: {
+          body: response.body,
+          header: response.header,
+          statusCode: response.statusCode
+        }
       }
     });
     return null;
@@ -54,7 +60,8 @@ const proxyOptions = {
   port: 7269,
   rule: proxyRule,
   webInterface: {
-    enable: false
+    enable: true,
+    webPort: 7270
   },
   // throttle: 10000,
   forceProxyHttps: true,

@@ -2,6 +2,7 @@ import { ipcRenderer } from 'electron';
 import React from 'react';
 import ListView from 'react-uwp/ListView';
 import SplitView, { SplitViewPane } from 'react-uwp/SplitView';
+import Tabs, { Tab } from 'react-uwp/Tabs';
 import { IRequest, IResponse } from '../main/Proxy';
 interface ICapturedRequest {
   id: string;
@@ -83,6 +84,14 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
       width: '100%',
       height: '100%'
     };
+    let curReqDetail;
+    let curResDetail;
+    if (this.state.currentRequest) {
+      curReqDetail = this.state.currentRequest.request.detail;
+      if (this.state.currentRequest.response) {
+        curResDetail = this.state.currentRequest.response.detail;
+      }
+    }
     return (
       <div style={baseStyle}>
         <SplitView
@@ -122,7 +131,6 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
                 );
               })}
           />
-
           <SplitViewPane>
             {this.state.currentRequest ? (
               <div
@@ -134,10 +142,35 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
                   overflowY: 'auto'
                 }}
               >
-                <h3>Request</h3>
-                <p>{JSON.stringify(this.state.currentRequest.request)}</p>
-                <h3>Response</h3>
-                <p>{JSON.stringify(this.state.currentRequest.response)}</p>
+                <Tabs>
+                  <Tab title="Request">
+                    <ListView
+                      listSource={
+                        curReqDetail
+                          ? [
+                              curReqDetail.protocol,
+                              curReqDetail.requestData,
+                              curReqDetail.requestOptions,
+                              curReqDetail.url
+                            ]
+                          : []
+                      }
+                    />
+                  </Tab>
+                  <Tab title="Response">
+                    <ListView
+                      listSource={
+                        curResDetail
+                          ? [
+                              curResDetail.statusCode,
+                              curResDetail.header,
+                              curResDetail.body
+                            ]
+                          : []
+                      }
+                    />
+                  </Tab>
+                </Tabs>
               </div>
             ) : null}
           </SplitViewPane>

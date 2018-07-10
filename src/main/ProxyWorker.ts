@@ -1,3 +1,4 @@
+import iconv from 'iconv-lite';
 import Proxy, { IRequestDetail, IResponseDetail } from './Proxy';
 import Util from './Util';
 
@@ -26,7 +27,28 @@ const proxyRule = {
     responseDetail: IResponseDetail
   ) {
     const response = responseDetail.response;
-    response.body = response.body.toString();
+    // tslint:disable-next-line:no-any
+    const resHeader: any = response.header;
+    let bodyContent = response.body as Buffer;
+    const headerStr = JSON.stringify(resHeader);
+    const charsetMatch = headerStr.match(/charset='?([a-zA-Z0-9-]+)'?/);
+    const contentType = resHeader && (resHeader['content-type'] || resHeader['Content-Type']);
+    let dataType;
+
+    if (charsetMatch && charsetMatch.length) {
+      const currentCharset = charsetMatch[1].toLowerCase();
+      if (currentCharset !== 'utf-8' && iconv.encodingExists(currentCharset)) {
+        response.body = iconv.decode(bodyContent, currentCharset);
+      }
+      dataType = contentType && /application\/json/i.test(contentType) ? 'json' : 'text';
+      response.body = bodyContent.toString();
+    } else if (contentType && /image/i.test(contentType)) {
+      dataType = 'image';
+      response.body = bodyContent.toString('base64');
+    } else {
+      dataType = contentType;
+      response.body = bodyContent.toString();
+    }
     process.send!({
       type: 'get-response',
       data: {
@@ -34,7 +56,8 @@ const proxyRule = {
         detail: {
           body: response.body,
           header: response.header,
-          statusCode: response.statusCode
+          statusCode: response.statusCode,
+          dataType: dataType
         }
       }
     });

@@ -1,9 +1,12 @@
 class Util {
+
+  private static _uniqueId = 0;
+
   /**
    * GenUniqueId
    */
   public static GenUniqueId() {
-    return new Date().getTime().toString() + Util.Rand(1000, 9999).toString();
+    return (this._uniqueId++).toString();
   }
 
   /**

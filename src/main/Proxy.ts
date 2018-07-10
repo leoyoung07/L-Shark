@@ -29,6 +29,7 @@ export interface IResponse {
   statusCode: number;
   header: {};
   body: string | Buffer;
+  dataType: string;
 }
 
 export interface IResponseDetail {

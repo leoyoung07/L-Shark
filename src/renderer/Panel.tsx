@@ -92,6 +92,23 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
         curResDetail = this.state.currentRequest.response.detail;
       }
     }
+
+    const ResponseDetailView = (props: {detail?: IResponse}) => {
+      if (props.detail) {
+        if (props.detail.dataType === 'image') {
+          return <img src={'data:image/png;base64,' + props.detail.body as string} />;
+        } else {
+          return (
+            <div>
+              {props.detail.body}
+            </div>
+          );
+        }
+      } else {
+        return null;
+      }
+    };
+
     return (
       <div style={baseStyle}>
         <SplitView
@@ -161,13 +178,12 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
                     <ListView
                       listSource={
                         curResDetail
-                          ? [
-                              curResDetail.statusCode,
-                              curResDetail.header,
-                              curResDetail.body
-                            ]
+                          ? [curResDetail.statusCode, curResDetail.header]
                           : []
                       }
+                    />
+                    <ResponseDetailView
+                      detail={curResDetail}
                     />
                   </Tab>
                 </Tabs>

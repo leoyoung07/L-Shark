@@ -1,5 +1,6 @@
 import { ipcRenderer } from 'electron';
 import React from 'react';
+import Dialog from 'react-uwp/Dialog';
 import ListView from 'react-uwp/ListView';
 import SplitView, { SplitViewPane } from 'react-uwp/SplitView';
 import Tabs, { Tab } from 'react-uwp/Tabs';
@@ -32,6 +33,7 @@ interface IPanelState {
   error?: string;
   expanded: boolean;
   currentRequest?: IRequestData;
+  proxyReady: boolean;
 }
 class Panel extends React.Component<IPanelProps, IPanelState> {
   constructor(props: IPanelProps) {
@@ -42,7 +44,8 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
     this.state = {
       url: '',
       requestHistory: {},
-      expanded: false
+      expanded: false,
+      proxyReady: false
     };
   }
 
@@ -63,6 +66,11 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
       requestData.response = response;
       this.setState({
         requestHistory: requestHistory
+      });
+    });
+    ipcRenderer.on('proxy-ready', (event: Electron.Event) => {
+      this.setState({
+        proxyReady: true
       });
     });
 
@@ -93,16 +101,16 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
       }
     }
 
-    const ResponseDetailView = (props: {detail?: IResponse}) => {
+    const ResponseDetailView = (props: { detail?: IResponse }) => {
       if (props.detail) {
         if (props.detail.dataType === 'image') {
-          return <img src={'data:image/png;base64,' + props.detail.body as string} />;
-        } else {
           return (
-            <div>
-              {props.detail.body}
-            </div>
+            <img
+              src={('data:image/png;base64,' + props.detail.body) as string}
+            />
           );
+        } else {
+          return <div>{props.detail.body}</div>;
         }
       } else {
         return null;
@@ -182,15 +190,19 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
                           : []
                       }
                     />
-                    <ResponseDetailView
-                      detail={curResDetail}
-                    />
+                    <ResponseDetailView detail={curResDetail} />
                   </Tab>
                 </Tabs>
               </div>
             ) : null}
           </SplitViewPane>
         </SplitView>
+        <Dialog
+          defaultShow={!this.state.proxyReady}
+          style={{ zIndex: 1000 }}
+        >
+          Proxy is starting up...
+        </Dialog>
       </div>
     );
   }

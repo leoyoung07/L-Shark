@@ -53,6 +53,14 @@ class Proxy extends EventEmitter {
     if (!this.proxyServer) {
       this.proxyServer = new AnyProxy.ProxyServer(this.proxyOptions);
     }
+    this.proxyServer.on('ready', () => {
+      this.emit('ready');
+    });
+
+    this.proxyServer.on('error', (e: Error) => {
+      this.emit('error', e);
+    });
+
     this.proxyServer.start();
   }
 

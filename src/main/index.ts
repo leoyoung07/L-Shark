@@ -67,6 +67,8 @@ function createMainWindow() {
         window.webContents.send('get-request', message.data);
       } else if (message.type === 'get-response') {
         window.webContents.send('get-response', message.data);
+      } else if (message.type === 'ready') {
+        window.webContents.send('proxy-ready', message.data);
       } else if (message.type === 'connect-error') {
         window.webContents.send('connect-error', message.data);
       } else if (message.type === 'error') {

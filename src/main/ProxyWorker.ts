@@ -7,7 +7,7 @@ const proxyRule = {
   beforeSendRequest: function*(requestDetail: IRequestDetail) {
     const id = Util.GenUniqueId();
     requestDetail._req.__request_id = id;
-    process.send!({
+    sendMessageToParent({
       type: 'get-request',
       data: {
         id: id,
@@ -49,7 +49,7 @@ const proxyRule = {
       dataType = contentType;
       response.body = bodyContent.toString();
     }
-    process.send!({
+    sendMessageToParent({
       type: 'get-response',
       data: {
         id: requestDetail._req.__request_id,
@@ -69,12 +69,12 @@ const proxyRule = {
   },
   // 请求出错的事件
   *onError(requestDetail: IRequestDetail, error: {}) {
-    process.send!({ type: 'error', data: error.toString() });
+    sendMessageToParent({ type: 'error', data: error.toString() });
     return null;
   },
   // https连接服务器出错
   *onConnectError(requestDetail: IRequestDetail, error: {}) {
-    process.send!({ type: 'connect-error', data: error.toString() });
+    sendMessageToParent({ type: 'connect-error', data: error.toString() });
     return null;
   }
 };
@@ -92,10 +92,20 @@ const proxyOptions = {
   silent: false
 };
 
+function sendMessageToParent(msg: {type: string, data?: {} | string}) {
+  if (process && process.send) {
+    process.send(msg);
+  }
+}
+
 const proxy = new Proxy(proxyOptions);
+
+proxy.on('ready', () => {
+  sendMessageToParent({type: 'ready'});
+});
 
 try {
   proxy.start();
 } catch (error) {
-  process.send!({ type: 'error', data: error.toString() });
+  sendMessageToParent({ type: 'error', data: error.toString() });
 }

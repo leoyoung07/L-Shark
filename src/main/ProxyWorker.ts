@@ -101,7 +101,8 @@ function sendMessageToParent(msg: {type: string, data?: {} | string}) {
 const proxy = new Proxy(proxyOptions);
 
 proxy.on('ready', () => {
-  sendMessageToParent({type: 'ready'});
+  const status = proxy.status();
+  sendMessageToParent({type: 'ready', data: status});
 });
 
 try {

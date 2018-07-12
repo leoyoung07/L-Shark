@@ -34,6 +34,8 @@ interface IPanelState {
   expanded: boolean;
   currentRequest?: IRequestData;
   proxyReady: boolean;
+  // tslint:disable-next-line:no-any
+  proxyStatus: any;
 }
 class Panel extends React.Component<IPanelProps, IPanelState> {
   constructor(props: IPanelProps) {
@@ -45,7 +47,8 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
       url: '',
       requestHistory: {},
       expanded: false,
-      proxyReady: false
+      proxyReady: false,
+      proxyStatus: null
     };
   }
 
@@ -128,6 +131,11 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
           style={baseStyle}
           expandedWidth={500}
         >
+          <div>
+            <p>{
+              this.state.proxyStatus ? JSON.stringify(this.state.proxyStatus) : ''
+            }</p>
+          </div>
           <ListView
             style={{
               margin: 0,

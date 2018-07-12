@@ -73,6 +73,17 @@ class Proxy extends EventEmitter {
       this.proxyServer = null;
     }
   }
+
+  /**
+   * status
+   */
+  public status() {
+    if (this.proxyServer) {
+      return this.proxyOptions;
+    } else {
+      return null;
+    }
+  }
 }
 
 export default Proxy;

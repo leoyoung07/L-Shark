@@ -120,6 +120,47 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
       }
     };
 
+    const RequestDetailPanel = (props: {curReqDetail?: IRequest, curResDetail?: IResponse}) => {
+      return (
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            padding: '10px',
+            overflowX: 'hidden',
+            overflowY: 'auto'
+          }}
+        >
+          <Tabs>
+            <Tab title="Request">
+              <ListView
+                listSource={
+                  props.curReqDetail
+                    ? [
+                        props.curReqDetail.protocol,
+                        props.curReqDetail.requestData,
+                        props.curReqDetail.requestOptions,
+                        props.curReqDetail.url
+                      ]
+                    : []
+                }
+              />
+            </Tab>
+            <Tab title="Response">
+              <ListView
+                listSource={
+                  props.curResDetail
+                    ? [props.curResDetail.statusCode, props.curResDetail.header]
+                    : []
+                }
+              />
+              <ResponseDetailView detail={props.curResDetail} />
+            </Tab>
+          </Tabs>
+        </div>
+      );
+    };
+
     return (
       <div style={baseStyle}>
         <SplitView
@@ -166,42 +207,7 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
           />
           <SplitViewPane>
             {this.state.currentRequest ? (
-              <div
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  padding: '10px',
-                  overflowX: 'hidden',
-                  overflowY: 'auto'
-                }}
-              >
-                <Tabs>
-                  <Tab title="Request">
-                    <ListView
-                      listSource={
-                        curReqDetail
-                          ? [
-                              curReqDetail.protocol,
-                              curReqDetail.requestData,
-                              curReqDetail.requestOptions,
-                              curReqDetail.url
-                            ]
-                          : []
-                      }
-                    />
-                  </Tab>
-                  <Tab title="Response">
-                    <ListView
-                      listSource={
-                        curResDetail
-                          ? [curResDetail.statusCode, curResDetail.header]
-                          : []
-                      }
-                    />
-                    <ResponseDetailView detail={curResDetail} />
-                  </Tab>
-                </Tabs>
-              </div>
+              <RequestDetailPanel curReqDetail={curReqDetail} curResDetail={curResDetail}/>
             ) : null}
           </SplitViewPane>
         </SplitView>

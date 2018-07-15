@@ -4,6 +4,7 @@ import Dialog from 'react-uwp/Dialog';
 import ListView from 'react-uwp/ListView';
 import SplitView, { SplitViewPane } from 'react-uwp/SplitView';
 import Tabs, { Tab } from 'react-uwp/Tabs';
+import { getTheme } from 'react-uwp/Theme';
 import { IRequest, IResponse } from '../main/Proxy';
 interface ICapturedRequest {
   id: string;
@@ -37,6 +38,10 @@ interface IPanelState {
   // tslint:disable-next-line:no-any
   proxyStatus: any;
 }
+
+const theme = getTheme({
+  themeName: 'light'
+});
 class Panel extends React.Component<IPanelProps, IPanelState> {
   constructor(props: IPanelProps) {
     super(props);
@@ -71,9 +76,10 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
         requestHistory: requestHistory
       });
     });
-    ipcRenderer.on('proxy-ready', (event: Electron.Event) => {
+    ipcRenderer.on('proxy-ready', (event: Electron.Event, args: {}) => {
       this.setState({
-        proxyReady: true
+        proxyReady: true,
+        proxyStatus: args
       });
     });
 
@@ -120,7 +126,10 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
       }
     };
 
-    const RequestDetailPanel = (props: {curReqDetail?: IRequest, curResDetail?: IResponse}) => {
+    const RequestDetailPanel = (props: {
+      curReqDetail?: IRequest;
+      curResDetail?: IResponse;
+    }) => {
       return (
         <div
           style={{
@@ -172,11 +181,17 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
           style={baseStyle}
           expandedWidth={500}
         >
-          <div>
-            <p>{
-              this.state.proxyStatus ? JSON.stringify(this.state.proxyStatus) : ''
-            }</p>
-          </div>
+          <h3 style={theme.typographyStyles!.subTitle}>
+            Status
+          </h3>
+          <p>
+            {this.state.proxyStatus
+              ? JSON.stringify(this.state.proxyStatus)
+              : ''}
+          </p>
+          <h3 style={theme.typographyStyles!.subTitle}>
+            Requests
+          </h3>
           <ListView
             style={{
               margin: 0,
@@ -207,14 +222,14 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
           />
           <SplitViewPane>
             {this.state.currentRequest ? (
-              <RequestDetailPanel curReqDetail={curReqDetail} curResDetail={curResDetail}/>
+              <RequestDetailPanel
+                curReqDetail={curReqDetail}
+                curResDetail={curResDetail}
+              />
             ) : null}
           </SplitViewPane>
         </SplitView>
-        <Dialog
-          defaultShow={!this.state.proxyReady}
-          style={{ zIndex: 1000 }}
-        >
+        <Dialog defaultShow={!this.state.proxyReady} style={{ zIndex: 1000 }}>
           Proxy is starting up...
         </Dialog>
       </div>

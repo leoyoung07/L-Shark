@@ -170,6 +170,32 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
       );
     };
 
+    // tslint:disable-next-line:no-any
+    const ProxyStatusView = (props: {proxyStatus?: any}) => {
+      return (
+        props.proxyStatus ? (
+          <ListView
+            style={{
+              margin: 0,
+              width: '100%'
+            }}
+            listSource={Object.keys(props.proxyStatus)
+              .sort()
+              .map((key, index) => {
+                return (
+                  <span key={key}>
+                    <span>{key}</span>
+                    <span style={{ float: 'right' }}>
+                      {JSON.stringify(props.proxyStatus[key])}
+                    </span>
+                  </span>
+                );
+              })}
+          />
+        ) : null
+      );
+    };
+
     return (
       <div style={baseStyle}>
         <SplitView
@@ -181,17 +207,9 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
           style={baseStyle}
           expandedWidth={500}
         >
-          <h3 style={theme.typographyStyles!.subTitle}>
-            Status
-          </h3>
-          <p>
-            {this.state.proxyStatus
-              ? JSON.stringify(this.state.proxyStatus)
-              : ''}
-          </p>
-          <h3 style={theme.typographyStyles!.subTitle}>
-            Requests
-          </h3>
+          <h3 style={theme.typographyStyles!.subTitle}>Status</h3>
+          <ProxyStatusView proxyStatus={this.state.proxyStatus}/>
+          <h3 style={theme.typographyStyles!.subTitle}>Requests</h3>
           <ListView
             style={{
               margin: 0,

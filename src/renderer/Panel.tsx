@@ -1,30 +1,16 @@
 import { ipcRenderer } from 'electron';
 import React from 'react';
 import Dialog from 'react-uwp/Dialog';
-import ListView from 'react-uwp/ListView';
 import SplitView, { SplitViewPane } from 'react-uwp/SplitView';
-import Tabs, { Tab } from 'react-uwp/Tabs';
 import { getTheme } from 'react-uwp/Theme';
-import { IRequest, IResponse } from '../main/Proxy';
-interface ICapturedRequest {
-  id: string;
-  detail: IRequest;
-}
-
-interface ICapturedResponse {
-  id: string;
-  detail: IResponse;
-}
-
-interface IRequestHistory {
-  [id: string]: IRequestData;
-}
-
-interface IRequestData {
-  request: ICapturedRequest;
-  pending: boolean;
-  response?: ICapturedResponse;
-}
+import ProxyStatusView from './ProxyStatusView';
+import RequestDetailPanel from './RequestDetailPanel';
+import RequestHistoryView, {
+  ICapturedRequest,
+  ICapturedResponse,
+  IRequestData,
+  IRequestHistory
+} from './RequestHistoryView';
 
 interface IPanelProps {}
 interface IPanelState {
@@ -110,92 +96,6 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
       }
     }
 
-    const ResponseDetailView = (props: { detail?: IResponse }) => {
-      if (props.detail) {
-        if (props.detail.dataType === 'image') {
-          return (
-            <img
-              src={('data:image/png;base64,' + props.detail.body) as string}
-            />
-          );
-        } else {
-          return <div>{props.detail.body}</div>;
-        }
-      } else {
-        return null;
-      }
-    };
-
-    const RequestDetailPanel = (props: {
-      curReqDetail?: IRequest;
-      curResDetail?: IResponse;
-    }) => {
-      return (
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            padding: '10px',
-            overflowX: 'hidden',
-            overflowY: 'auto'
-          }}
-        >
-          <Tabs>
-            <Tab title="Request">
-              <ListView
-                listSource={
-                  props.curReqDetail
-                    ? [
-                        props.curReqDetail.protocol,
-                        props.curReqDetail.requestData,
-                        props.curReqDetail.requestOptions,
-                        props.curReqDetail.url
-                      ]
-                    : []
-                }
-              />
-            </Tab>
-            <Tab title="Response">
-              <ListView
-                listSource={
-                  props.curResDetail
-                    ? [props.curResDetail.statusCode, props.curResDetail.header]
-                    : []
-                }
-              />
-              <ResponseDetailView detail={props.curResDetail} />
-            </Tab>
-          </Tabs>
-        </div>
-      );
-    };
-
-    // tslint:disable-next-line:no-any
-    const ProxyStatusView = (props: {proxyStatus?: any}) => {
-      return (
-        props.proxyStatus ? (
-          <ListView
-            style={{
-              margin: 0,
-              width: '100%'
-            }}
-            listSource={Object.keys(props.proxyStatus)
-              .sort()
-              .map((key, index) => {
-                return (
-                  <span key={key}>
-                    <span>{key}</span>
-                    <span style={{ float: 'right' }}>
-                      {JSON.stringify(props.proxyStatus[key])}
-                    </span>
-                  </span>
-                );
-              })}
-          />
-        ) : null
-      );
-    };
-
     return (
       <div style={baseStyle}>
         <SplitView
@@ -208,35 +108,11 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
           expandedWidth={500}
         >
           <h3 style={theme.typographyStyles!.subTitle}>Status</h3>
-          <ProxyStatusView proxyStatus={this.state.proxyStatus}/>
+          <ProxyStatusView proxyStatus={this.state.proxyStatus} />
           <h3 style={theme.typographyStyles!.subTitle}>Requests</h3>
-          <ListView
-            style={{
-              margin: 0,
-              width: '100%',
-              height: '100%',
-              overflowX: 'hidden',
-              overflowY: 'auto'
-            }}
-            listSource={Object.keys(this.state.requestHistory)
-              .sort()
-              .map((id, index) => {
-                const requestData = this.state.requestHistory[id];
-                return (
-                  <div
-                    key={id}
-                    style={{
-                      color: requestData.pending ? 'gray' : 'black',
-                      cursor: 'pointer'
-                    }}
-                    onClick={e => {
-                      this.handleRequestHistoryClick(id, e);
-                    }}
-                  >
-                    {requestData.request.detail.url}
-                  </div>
-                );
-              })}
+          <RequestHistoryView
+            requestHistory={this.state.requestHistory}
+            handleRequestHistoryClick={this.handleRequestHistoryClick}
           />
           <SplitViewPane>
             {this.state.currentRequest ? (

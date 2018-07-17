@@ -38,7 +38,8 @@ class RequestHistoryView extends React.Component<
           width: '100%',
           height: '100%',
           overflowX: 'hidden',
-          overflowY: 'auto'
+          overflowY: 'auto',
+          border: 'none'
         }}
         listSource={Object.keys(this.props.requestHistory)
           .sort()

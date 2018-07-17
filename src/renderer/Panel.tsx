@@ -3,6 +3,7 @@ import React from 'react';
 import Dialog from 'react-uwp/Dialog';
 import SplitView, { SplitViewPane } from 'react-uwp/SplitView';
 import { getTheme } from 'react-uwp/Theme';
+import Header from './Header';
 import ProxyStatusView from './ProxyStatusView';
 import RequestDetailPanel from './RequestDetailPanel';
 import RequestHistoryView, {
@@ -107,9 +108,9 @@ class Panel extends React.Component<IPanelProps, IPanelState> {
           style={baseStyle}
           expandedWidth={500}
         >
-          <h3 style={theme.typographyStyles!.subTitle}>Status</h3>
+          <Header theme={theme}>Status</Header>
           <ProxyStatusView proxyStatus={this.state.proxyStatus} />
-          <h3 style={theme.typographyStyles!.subTitle}>Requests</h3>
+          <Header theme={theme}>Requests</Header>
           <RequestHistoryView
             requestHistory={this.state.requestHistory}
             handleRequestHistoryClick={this.handleRequestHistoryClick}

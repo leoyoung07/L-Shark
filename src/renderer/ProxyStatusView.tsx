@@ -13,7 +13,8 @@ class ProxyStatusView extends React.Component<IProxyStatusViewProps, IProxyStatu
       <ListView
         style={{
           margin: 0,
-          width: '100%'
+          width: '100%',
+          border: 'none'
         }}
         listSource={Object.keys(this.props.proxyStatus)
           .sort()

@@ -1,8 +1,8 @@
 import React from 'react';
 import ListView from 'react-uwp/ListView';
 import Tabs, { Tab } from 'react-uwp/Tabs';
-import ResponseDetailView from './ResponseDetailView';
 import { IRequest, IResponse } from '../main/Proxy';
+import ResponseDetailView from './ResponseDetailView';
 
 interface IRequestDetailPanelState {}
 interface IRequestDetailPanelProps {
